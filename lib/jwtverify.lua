@@ -151,13 +151,13 @@ function jwtverify(txn)
     end
 
     -- 5. Verify the issuer
-    if issuerIsValid(token, issuer) == false then
+    if issuer ~= nil and issuerIsValid(token, issuer) == false then
       log("Issuer not valid.")
       goto out
     end
 
     -- 6. Verify the audience
-    if audienceIsValid(token, audience) == false then
+    if audience ~= nil and audienceIsValid(token, audience) == false then
       log("Audience not valid.")
       goto out
     end
@@ -166,7 +166,7 @@ function jwtverify(txn)
     if token.payloaddecoded.scope ~= nil then
       txn.set_var(txn, "txn.oauth_scopes", token.payloaddecoded.scope)
     else
-      txn.set_var(txn, "txn.oauth_scopes", "")  
+      txn.set_var(txn, "txn.oauth_scopes", "")
     end
 
     -- 8. Set authorized variable
@@ -192,8 +192,8 @@ core.register_init(function()
   config.audience = os.getenv("OAUTH_AUDIENCE")
 
   log("PublicKeyPath: " .. publicKeyPath)
-  log("Issuer: " .. config.issuer)
-  log("Audience: " .. config.audience)
+  log("Issuer: " .. (config.issuer or "<none>"))
+  log("Audience: " .. (config.audience or "<none>"))
 end)
 
 -- Called on a request.
