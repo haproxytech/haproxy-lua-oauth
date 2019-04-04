@@ -72,10 +72,10 @@ local function decodeJwt(authorizationHeader)
 
     local token = {}
     token.header = headerFields[2]
-    token.headerdecoded = json.decode(base64.decode(token.header))
+    token.headerdecoded = json:decode(base64.decode(token.header))
 
     token.payload = headerFields[3]
-    token.payloaddecoded = json.decode(base64.decode(token.payload))
+    token.payloaddecoded = json:decode(base64.decode(token.payload))
 
     token.signature = headerFields[4]
     token.signaturedecoded = base64.decode(token.signature)
