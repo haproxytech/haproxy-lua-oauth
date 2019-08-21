@@ -175,7 +175,7 @@ if $install_luajwt_var; then
     # Install Lua JWT
     if ! $lua_installed; then
         if $rhel_based; then
-            download_and_install_lua=(download_rhel_lua build_lua install_rhel_lua)
+            download_and_install_lua=(install_yum_deps download_rhel_lua build_lua install_rhel_lua)
         elif $debian_based; then
             download_and_install_lua=(install_deb_lua)
         fi
