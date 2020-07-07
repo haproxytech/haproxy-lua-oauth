@@ -29,6 +29,8 @@ local openssl = {
     digest = require 'openssl.digest',
     x509 = require 'openssl.x509'
 }
+local split = require "split"
+local tableutils = require "tableutils"
 
 local function log(msg)
     if config.debug then
@@ -115,8 +117,25 @@ local function issuerIsValid(token, expectedIssuer)
   return token.payloaddecoded.iss == expectedIssuer
 end
 
-local function audienceIsValid(token, expectedAudience)
-  return token.payloaddecoded.aud == expectedAudience
+local function isCsv(value)
+    if (not(type(value) == "string")) then
+        return false
+    end
+
+    if (not value:find(',')) then
+        return false
+    end
+
+    return true
+end
+
+local function isValidClaim(actualClaim, expectedClaim)
+  if (type(actualClaim) == "table" and isCsv(expectedClaim)) then
+    expectedClaimAsTable = split.split(expectedClaim, ",", true)
+    return tableutils.valsMatches(actualClaim, expectedClaimAsTable)
+  end
+
+  return actualClaim == expectedClaim
 end
 
 function jwtverify(txn)
@@ -157,7 +176,7 @@ function jwtverify(txn)
     end
 
     -- 6. Verify the audience
-    if audience ~= nil and audienceIsValid(token, audience) == false then
+    if audience ~= nil and isValidClaim(token.payloaddecoded.aud, audience) == false then
       log("Audience not valid.")
       goto out
     end

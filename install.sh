@@ -116,6 +116,10 @@ download_luajwt_deps() {
     unzip -qo master.zip
     curl -sLO https://github.com/wahern/luaossl/archive/master.zip
     unzip -qo master.zip 
+    curl -sLO https://github.com/moteus/lua-split/archive/master.zip
+    unzip -qo master.zip 
+    curl -sLO https://github.com/dyre/lua-tableutils/archive/master.zip
+    unzip -qo master.zip 
 }
 
 install_luajwt() {
@@ -135,7 +139,9 @@ install_luajwt_deps() {
     cd luaossl-master/
     make install >/dev/null
     cd ..
-    mv json.lua-master/json.lua $lua_dep_dir 
+    mv json.lua-master/json.lua $lua_dep_dir
+    mv lua-split/src/split.lua $lua_dep_dir 
+    mv lua-tableutils/tableutils.lua $lua_dep_dir
 }
 
 case $1 in
