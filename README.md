@@ -44,7 +44,7 @@ A sample application can be found at https://github.com/haproxytechblog/haproxy-
 1. Get a JSON web token (JWT) from your authentication server by following the *Quick Start* on the Auth0 website, under the Applications tab, for your Machine to Machine application.
 1. Make requests to your API and attach the JWT in the Authorization header. You should get a successful response.
 
-## Supporting Signing Algorithms
+## Supported Signing Algorithms
 
 * RS256
 * HS256
