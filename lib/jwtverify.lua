@@ -124,15 +124,15 @@ local function hs256SignatureIsValid(token, secret)
 end
 
 local function expirationIsValid(token)
-return os.difftime(token.payloaddecoded.exp, core.now().sec) > 0
+  return os.difftime(token.payloaddecoded.exp, core.now().sec) > 0
 end
 
 local function issuerIsValid(token, expectedIssuer)
-return token.payloaddecoded.iss == expectedIssuer
+  return token.payloaddecoded.iss == expectedIssuer
 end
 
 local function audienceIsValid(token, expectedAudience)
-return token.payloaddecoded.aud == expectedAudience
+  return token.payloaddecoded.aud == expectedAudience
 end
 
 function jwtverify(txn)
@@ -149,7 +149,7 @@ function jwtverify(txn)
     goto out
   end
 
-  -- 2. Verify the signature algorithm is supported (RS256)
+  -- 2. Verify the signature algorithm is supported (HS256, RS256)
   if algorithmIsValid(token) == false then
       log("Algorithm not valid.")
       goto out
