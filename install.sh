@@ -35,13 +35,13 @@ display_working() {
 download_haproxy_rhel() {
     printf "\r[+] Downloading HAProxy\n"
     curl -sLO https://www.haproxy.org/download/1.9/src/haproxy-$HAPROXY_VERSION.tar.gz
-    tar xf haproxy-$HAPROXY_VERSION.tar.gz 
+    tar xf haproxy-$HAPROXY_VERSION.tar.gz && rm haproxy-$HAPROXY_VERSION.tar.gz
 }
 
 download_rhel_lua() {
     printf "\r[+] Downloading Lua\n"
     curl -sLO https://www.lua.org/ftp/lua-$LUA_VERSION.tar.gz
-    tar xf lua-$LUA_VERSION.tar.gz 
+    tar xf lua-$LUA_VERSION.tar.gz && rm lua-$LUA_VERSION.tar.gz
 }
 
 install_yum_deps() {
@@ -105,19 +105,22 @@ download_luajwt() {
     printf "\r[+] Downloading haproxy-lua-jwt\n"
     cd $SOURCE_DIR
     curl -sLO https://github.com/haproxytech/haproxy-lua-jwt/archive/master.zip
-    unzip -qo master.zip
+    unzip -qo master.zip && rm master.zip
 }
 
 download_luajwt_deps() {
     printf "\r[+] Downloading haproxy-lua-jwt dependencies\n"
     cd $SOURCE_DIR
     apt-get install -y unzip >/dev/null 2>&1
+
     curl -sLO https://github.com/diegonehab/luasocket/archive/master.zip
-    unzip -qo master.zip
+    unzip -qo master.zip && mv luasocket-master luasocket && rm master.zip
+
     curl -sLO https://github.com/rxi/json.lua/archive/master.zip
-    unzip -qo master.zip
-    curl -sLO https://github.com/wahern/luaossl/archive/master.zip
-    unzip -qo master.zip 
+    unzip -qo master.zip && mv json.lua-master json && rm master.zip
+
+    curl -sLO https://github.com/wahern/luaossl/archive/rel-20181207.zip
+    unzip -qo rel-20181207.zip && mv luaossl-rel-20181207 luaossl && rm rel-20181207.zip
 }
 
 install_luajwt() {
@@ -131,13 +134,13 @@ install_luajwt() {
 install_luajwt_deps() {
     printf "\r[+] Installing haproxy-lua-jwt dependencies\n"
     cd $SOURCE_DIR
-    cd luasocket-master/
+    cd luasocket/
     make clean all install-both LUAINC=/usr/include/lua5.3/ >/dev/null
     cd ..
-    cd luaossl-master/
+    cd luaossl/
     make install >/dev/null
     cd ..
-    mv json.lua-master/json.lua $lua_dep_dir 
+    mv json/json.lua $lua_dep_dir 
 }
 
 case $1 in
