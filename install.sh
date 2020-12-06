@@ -1,5 +1,7 @@
 #!/bin/bash
 SOURCE_DIR=/usr/src
+DEST_BASE_DIR=""
+SYSTEMD_NAME=haproxy.service
 HAPROXY_VERSION=1.9.1
 LUA_VERSION=5.3.5
 
@@ -8,7 +10,7 @@ install_luajwt_var=false
 rhel_based=false
 debian_based=false
 lua_installed=false
-lua_dep_dir=/usr/local/share/lua/5.3/
+lua_dep_dir=$DEST_BASE_DIR/usr/local/share/lua/5.3/
 
 if [ -f /etc/redhat-release ]; then
     rhel_based=true
@@ -61,8 +63,8 @@ build_haproxy() {
 
 install_rhel_haproxy() {
     printf "\r[+] Installing HAProxy\n"
-    /bin/cp $SOURCE_DIR/haproxy-$HAPROXY_VERSION/haproxy /usr/sbin/
-    mkdir -p /etc/haproxy/pem
+    /bin/cp $SOURCE_DIR/haproxy-$HAPROXY_VERSION/haproxy $DEST_BASE_DIR/usr/sbin/
+    mkdir -p $DEST_BASE_DIR/etc/haproxy/pem
 }
 
 install_deb_haproxy() {
@@ -76,8 +78,8 @@ install_deb_haproxy() {
 install_haproxy_systemd() {
     cd $SOURCE_DIR/haproxy-$HAPROXY_VERSION/contrib/systemd
     make clean >/dev/null
-    make PREFIX=/usr >/dev/null
-    /bin/cp haproxy.service /usr/lib/systemd/system/
+    make PREFIX=$DEST_BASE_DIR/usr >/dev/null
+    /bin/cp haproxy.service /usr/lib/systemd/system/$SYSTEMD_NAME
     systemctl daemon-reload
 } 
 
