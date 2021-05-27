@@ -1,6 +1,6 @@
-# JSON Web Token (JWT) library for HAProxy
+# OAuth 2 library for HAProxy
 
-This is a Lua library for HAProxy that will verify JWT tokens.
+This is a Lua library for HAProxy that will verify OAuth 2 JWT tokens.
 
 ## Install
 
@@ -14,8 +14,8 @@ The `jwtverify.lua` file has these dependencies:
 Install like so:
 
 ```
-git clone https://github.com/haproxytech/haproxy-lua-jwt.git
-cd haproxy-lua-jwt
+git clone https://github.com/haproxytech/haproxy-lua-oauth.git
+cd haproxy-lua-oauth
 chmod +x ./install.sh
 sudo ./install.sh luajwt
 ```
