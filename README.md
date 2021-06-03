@@ -48,3 +48,4 @@ A sample application can be found at https://github.com/haproxytechblog/haproxy-
 
 * RS256
 * HS256
+* HS512
