@@ -101,8 +101,8 @@ local function algorithmIsValid(token)
   if token.headerdecoded.alg == nil then
       log("No 'alg' provided in JWT header.")
       return false
-  elseif token.headerdecoded.alg ~= 'HS256' and token.headerdecoded.alg ~= 'RS256' then
-      log("HS256 and RS256 supported. Incorrect alg in JWT: " .. token.headerdecoded.alg)
+  elseif token.headerdecoded.alg ~= 'HS256' and  token.headerdecoded.alg ~= 'HS512' and token.headerdecoded.alg ~= 'RS256' then
+      log("HS256, HS512 and RS256 supported. Incorrect alg in JWT: " .. token.headerdecoded.alg)
       return false
   end
 
@@ -119,6 +119,12 @@ end
 
 local function hs256SignatureIsValid(token, secret)
   local hmac = openssl.hmac.new(secret, 'SHA256')
+  local checksum = hmac:final(token.header .. '.' .. token.payload)
+  return checksum == token.signaturedecoded
+end
+
+local function hs512SignatureIsValid(token, secret)
+  local hmac = openssl.hmac.new(secret, 'SHA512')
   local checksum = hmac:final(token.header .. '.' .. token.payload)
   return checksum == token.signaturedecoded
 end
@@ -149,7 +155,7 @@ function jwtverify(txn)
     goto out
   end
 
-  -- 2. Verify the signature algorithm is supported (HS256, RS256)
+  -- 2. Verify the signature algorithm is supported (HS256, HS512, RS256)
   if algorithmIsValid(token) == false then
       log("Algorithm not valid.")
       goto out
@@ -163,6 +169,11 @@ function jwtverify(txn)
     end
   elseif token.headerdecoded.alg == 'HS256' then
     if hs256SignatureIsValid(token, hmacSecret) == false then
+      log("Signature not valid.")
+      goto out
+    end
+  elseif token.headerdecoded.alg == 'HS512' then
+    if hs512SignatureIsValid(token, hmacSecret) == false then
       log("Signature not valid.")
       goto out
     end
@@ -217,7 +228,7 @@ local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH")
 local pem = readAll(publicKeyPath)
 config.publicKey = pem
 
--- when using an HS256 signature
+-- when using an HS256 or HS512 signature
 config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
 
 log("PublicKeyPath: " .. publicKeyPath)
