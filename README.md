@@ -17,14 +17,14 @@ Install like so:
 git clone https://github.com/haproxytech/haproxy-lua-oauth.git
 cd haproxy-lua-oauth
 chmod +x ./install.sh
-sudo ./install.sh luajwt
+sudo ./install.sh luaoauth
 ```
 
 You have several installation modes:
 
 | Command                   | Meaning                                                                                   |
 |---------------------------|-------------------------------------------------------------------------------------------|
-| `sudo install.sh luajwt`  | Installs jwtverify.lua and its dependencies to **/usr/local/share/lua/5.3/jwtverify.lua** |
+| `sudo install.sh luaoauth`  | Installs jwtverify.lua and its dependencies to **/usr/local/share/lua/5.3/jwtverify.lua** |
 | `sudo install.sh haproxy` | Installs HAProxy                                                                          |
 | `sudo install.sh all`     | Installs HAProxy and jwtverify.lua and its dependencies                                   |
 
