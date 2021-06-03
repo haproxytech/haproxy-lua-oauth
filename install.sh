@@ -128,7 +128,7 @@ install_luajwt() {
     if [ ! -e $lua_dep_dir ]; then
         mkdir -p $lua_dep_dir;
     fi;
-    mv $SOURCE_DIR/haproxy-lua-jwt-master/lib/*.lua $lua_dep_dir 
+    mv $SOURCE_DIR/haproxy-lua-oauth-master/lib/*.lua $lua_dep_dir
 }
 
 install_luajwt_deps() {
