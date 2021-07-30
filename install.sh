@@ -104,7 +104,7 @@ install_deb_lua() {
 download_luaoauth() {
     printf "\r[+] Downloading haproxy-lua-oauth\n"
     cd $SOURCE_DIR
-    curl -sLO https://github.com/haproxytech/haproxy-lua-oauth/archive/master.zip
+    curl -sLO https://github.com/greyscaleai521/gs-haproxy-lua-oauth/archive/master.zip
     unzip -qo master.zip && rm master.zip
 }
 

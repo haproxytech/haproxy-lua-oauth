@@ -225,8 +225,8 @@ config.audience = os.getenv("OAUTH_AUDIENCE")
 
 -- when using an RS256 signature
 local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH") 
-local pem = readAll(publicKeyPath)
-config.publicKey = pem
+-- local pem = readAll(publicKeyPath)
+-- config.publicKey = pem
 
 -- when using an HS256 or HS512 signature
 config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
