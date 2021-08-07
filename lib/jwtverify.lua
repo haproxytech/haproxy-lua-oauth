@@ -197,14 +197,29 @@ function jwtverify(txn)
     goto out
   end
 
-  -- 7. Add scopes to variable
+  -- 7. Add audience(s) to variable
+  if token.payloaddecoded.aud ~= nil then
+    if type(token.payloaddecoded.aud) == "table" then
+      local audString = " "
+      for key,value in pairs(token.payloaddecoded.aud) do
+        audString=audString..value.." "
+      end
+      txn.set_var(txn, "txn.audience", audString)
+    else
+      txn.set_var(txn, "txn.audience", token.payloaddecoded.aud)
+    end
+  else
+    txn.set_var(txn, "txn.audience", "")
+  end
+
+  -- 8. Add scopes to variable
   if token.payloaddecoded.scope ~= nil then
     txn.set_var(txn, "txn.oauth_scopes", token.payloaddecoded.scope)
   else
     txn.set_var(txn, "txn.oauth_scopes", "")
   end
 
-  -- 8. Set authorized variable
+  -- 9. Set authorized variable
   log("req.authorized = true")
   txn.set_var(txn, "txn.authorized", true)
 
