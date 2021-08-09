@@ -138,7 +138,32 @@ local function issuerIsValid(token, expectedIssuer)
 end
 
 local function audienceIsValid(token, expectedAudience)
-  return token.payloaddecoded.aud == expectedAudience
+  if type(token.payloaddecoded.aud) == "table" and type(expectedAudience) == "table" then
+    for tokenKey,tokenValue in pairs(token.payloaddecoded.aud) do
+      for expectedKey,expectedValue in pairs(expectedAudience) do
+        if expectedValue==tokenValue then
+          return true
+        end
+      end
+    end
+    return false
+  elseif type(token.payloaddecoded.aud) == "table" then
+    for tokenKey,tokenValue in pairs(token.payloaddecoded.aud) do
+      if tokenValue == expectedAudience then
+        return true
+      end
+    end
+    return false
+  elseif type(expectedAudience) ==  "table" then
+    for expectedKey,expectedValue in pairs(expectedAudience) do
+      if expectedValue == token.payloaddecoded.aud then
+        return true
+      end
+    end
+    return false
+  else
+    return expectedAudience == token.payloaddecoded.aud
+  end
 end
 
 function jwtverify(txn)
@@ -197,29 +222,14 @@ function jwtverify(txn)
     goto out
   end
 
-  -- 7. Add audience(s) to variable
-  if token.payloaddecoded.aud ~= nil then
-    if type(token.payloaddecoded.aud) == "table" then
-      local audString = " "
-      for key,value in pairs(token.payloaddecoded.aud) do
-        audString=audString..value.." "
-      end
-      txn.set_var(txn, "txn.audience", audString)
-    else
-      txn.set_var(txn, "txn.audience", token.payloaddecoded.aud)
-    end
-  else
-    txn.set_var(txn, "txn.audience", "")
-  end
-
-  -- 8. Add scopes to variable
+  -- 7. Add scopes to variable
   if token.payloaddecoded.scope ~= nil then
     txn.set_var(txn, "txn.oauth_scopes", token.payloaddecoded.scope)
   else
     txn.set_var(txn, "txn.oauth_scopes", "")
   end
 
-  -- 9. Set authorized variable
+  -- 8. Set authorized variable
   log("req.authorized = true")
   txn.set_var(txn, "txn.authorized", true)
 
@@ -236,7 +246,11 @@ end
 -- Loads the OAuth public key for validating the JWT signature.
 core.register_init(function()
 config.issuer = os.getenv("OAUTH_ISSUER")
-config.audience = os.getenv("OAUTH_AUDIENCE")
+if os.getenv("OAUTH_AUDIENCE") ~= nil then
+  config.audience = core.tokenize(os.getenv("OAUTH_AUDIENCE"),",")
+else
+  config.audience = nil
+end
 
 -- when using an RS256 signature
 local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH") 
@@ -248,8 +262,25 @@ config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
 
 log("PublicKeyPath: " .. publicKeyPath)
 log("Issuer: " .. (config.issuer or "<none>"))
-log("Audience: " .. (config.audience or "<none>"))
+
+-- Format condig.audience table
+local audString = ""
+if config.audience  ~= nil then
+  for audKey,audValue in pairs(config.audience) do
+    audString=audString..audValue..","
+  end
+else
+  audString="<none>"
+end
+log("Audience: " .. audString)
+
 end)
 
 -- Called on a request.
 core.register_action('jwtverify', {'http-req'}, jwtverify, 0)
+
+-- Register validateAudience HaProxy Fetch
+core.register_fetches("validateAudience", function(txn, aud)
+  local token = decodeJwt(txn.sf:req_hdr("Authorization"))
+  return audienceIsValid(token,aud)
+end)
