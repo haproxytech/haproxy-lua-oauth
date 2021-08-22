@@ -49,3 +49,26 @@ A sample application can be found at https://github.com/haproxytechblog/haproxy-
 * RS256
 * HS256
 * HS512
+
+## Support for multiple audiences
+
+This library support specifying multiple audience values in the JWT token. They should be specified as a JSON array of strings.
+You can also accept multiple audience values in the `OAUTH_AUDIENCE` environment variable in the **haproxy.cfg** file. Separate each value
+with a space and surround it with double quotes:
+
+```
+setenv OAUTH_AUDIENCE "https://api.mywebsite.com https://api2.mywebsite.com"
+```
+
+## Output variables
+
+After calling `http-request lua.jwtverify`, you get access to variables for each of the claims in the token.
+
+*Examples*
+
+* `var(txn.oauth.aud)`
+* `var(txn.oauth.clientId)`
+* `var(txn.oauth.iss)`
+* `var(txn.oauth.scope)`
+
+For example, you could track rate limiting based on the clientId or set different rate limit thresholds based on the scope.
