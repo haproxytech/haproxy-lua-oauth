@@ -59,7 +59,25 @@ local function dump(o)
   end
 end
 
-function readAll(file)
+-- Loops through array to find the given string.
+-- items: array of strings
+-- test_str: string to search for
+local function contains(items, test_str)
+  for _,item in pairs(items) do
+
+    -- strip whitespace
+    item = item:gsub("%s+", "")
+    test_str = test_str:gsub("%s+", "")
+
+    if item == test_str then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function readAll(file)
   log("Reading file " .. file)
   local f = assert(io.open(file, "rb"))
   local content = f:read("*all")
@@ -90,7 +108,6 @@ local function decodeJwt(authorizationHeader)
   token.signature = headerFields[4]
   token.signaturedecoded = base64.decode(token.signature)
 
-  log('Authorization header: ' .. authorizationHeader)
   log('Decoded JWT header: ' .. dump(token.headerdecoded))
   log('Decoded JWT payload: ' .. dump(token.payloaddecoded))
 
@@ -137,11 +154,43 @@ local function issuerIsValid(token, expectedIssuer)
   return token.payloaddecoded.iss == expectedIssuer
 end
 
-local function audienceIsValid(token, expectedAudience)
-  return token.payloaddecoded.aud == expectedAudience
+-- Checks if the audience in the token is listed in the
+-- OAUTH_AUDIENCE environment variable. Both the token audience
+-- and the environment variable can contain multiple audience values, 
+-- separated by commas. Each value will be checked.
+local function audienceIsValid(token, expectedAudienceParam)
+  
+  -- Convert OAUTH_AUDIENCE environment variable to a table,
+  -- even if it contains only one value
+  local expectedAudiences = expectedAudienceParam
+  if type(expectedAudiences) == "string" then
+    -- split multiple values using a space as the delimiter
+    expectedAudiences = core.tokenize(expectedAudienceParam, " ")
+  end
+
+  -- Convert 'aud' claim to a table, even if it contains only one value
+  local receivedAudiences = token.payloaddecoded.aud
+  if type(token.payloaddecoded.aud) == "string" then
+    receivedAudiences ={}
+    receivedAudiences[1] = token.payloaddecoded.aud
+  end
+
+  for _, receivedAudience in ipairs(receivedAudiences) do
+    if contains(expectedAudiences, receivedAudience) then
+      return true
+    end
+  end
+
+  return false
 end
 
-function jwtverify(txn)
+local function setVariablesFromPayload(txn, decodedPayload)
+  for key, value in pairs(decodedPayload) do
+    txn:set_var("txn.oauth." .. key, dump(value))
+  end
+end
+
+local function jwtverify(txn)
   local pem = config.publicKey
   local issuer = config.issuer
   local audience = config.audience
@@ -154,6 +203,9 @@ function jwtverify(txn)
     log("Token could not be decoded.")
     goto out
   end
+
+  -- Set an HAProxy variable for each field in the token payload
+  setVariablesFromPayload(txn, token.payloaddecoded)
 
   -- 2. Verify the signature algorithm is supported (HS256, HS512, RS256)
   if algorithmIsValid(token) == false then
@@ -197,13 +249,6 @@ function jwtverify(txn)
     goto out
   end
 
-  -- 7. Add scopes to variable
-  if token.payloaddecoded.scope ~= nil then
-    txn.set_var(txn, "txn.oauth_scopes", token.payloaddecoded.scope)
-  else
-    txn.set_var(txn, "txn.oauth_scopes", "")
-  end
-
   -- 8. Set authorized variable
   log("req.authorized = true")
   txn.set_var(txn, "txn.authorized", true)
@@ -220,20 +265,20 @@ end
 -- Called after the configuration is parsed.
 -- Loads the OAuth public key for validating the JWT signature.
 core.register_init(function()
-config.issuer = os.getenv("OAUTH_ISSUER")
-config.audience = os.getenv("OAUTH_AUDIENCE")
-
--- when using an RS256 signature
-local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH") 
-local pem = readAll(publicKeyPath)
-config.publicKey = pem
-
--- when using an HS256 or HS512 signature
-config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
-
-log("PublicKeyPath: " .. publicKeyPath)
-log("Issuer: " .. (config.issuer or "<none>"))
-log("Audience: " .. (config.audience or "<none>"))
+  config.issuer = os.getenv("OAUTH_ISSUER")
+  config.audience = os.getenv("OAUTH_AUDIENCE")
+  
+  -- when using an RS256 signature
+  local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH") 
+  local pem = readAll(publicKeyPath)
+  config.publicKey = pem
+  
+  -- when using an HS256 or HS512 signature
+  config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
+  
+  log("PublicKeyPath: " .. publicKeyPath)
+  log("Issuer: " .. (config.issuer or "<none>"))
+  log("Audience: " .. (config.audience or "<none>"))
 end)
 
 -- Called on a request.
