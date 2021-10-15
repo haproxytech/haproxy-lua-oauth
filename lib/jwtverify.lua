@@ -270,13 +270,15 @@ core.register_init(function()
   
   -- when using an RS256 signature
   local publicKeyPath = os.getenv("OAUTH_PUBKEY_PATH") 
-  local pem = readAll(publicKeyPath)
-  config.publicKey = pem
+  if publicKeyPath ~= nil then
+    local pem = readAll(publicKeyPath)
+    config.publicKey = pem
+  end 
   
   -- when using an HS256 or HS512 signature
   config.hmacSecret = os.getenv("OAUTH_HMAC_SECRET")
   
-  log("PublicKeyPath: " .. publicKeyPath)
+  log("PublicKeyPath: " .. (publicKeyPath or "<none>"))
   log("Issuer: " .. (config.issuer or "<none>"))
   log("Audience: " .. (config.audience or "<none>"))
 end)
