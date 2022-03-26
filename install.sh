@@ -1,16 +1,12 @@
 #!/bin/bash
 SOURCE_DIR=/usr/src
-DEST_BASE_DIR=""
-SYSTEMD_NAME=haproxy.service
-HAPROXY_VERSION=1.9.1
 LUA_VERSION=5.3.5
 
-install_haproxy_var=false
 install_luaoauth_var=false
 rhel_based=false
 debian_based=false
 lua_installed=false
-lua_dep_dir=$DEST_BASE_DIR/usr/local/share/lua/5.3/
+lua_dep_dir=/usr/local/share/lua/5.3/
 
 if [ -f /etc/redhat-release ]; then
     rhel_based=true
@@ -32,12 +28,6 @@ display_working() {
     done
 }
 
-download_haproxy_rhel() {
-    printf "\r[+] Downloading HAProxy\n"
-    curl -sLO https://www.haproxy.org/download/1.9/src/haproxy-$HAPROXY_VERSION.tar.gz
-    tar xf haproxy-$HAPROXY_VERSION.tar.gz && rm haproxy-$HAPROXY_VERSION.tar.gz
-}
-
 download_rhel_lua() {
     printf "\r[+] Downloading Lua\n"
     curl -sLO https://www.lua.org/ftp/lua-$LUA_VERSION.tar.gz
@@ -48,40 +38,6 @@ install_yum_deps() {
     printf "\r[+] Installing yum dependencies\n"
     yum -y install gcc openssl-devel readline-devel systemd-devel unzip >/dev/null 2>&1
 }
-
-build_haproxy() {
-    printf "\r[+] Building HAProxy\n"
-    cd $SOURCE_DIR/haproxy-$HAPROXY_VERSION
-    make TARGET=linux2628 USE_LINUX_SPLICE=1 USE_CPU_AFFINITY=1 USE_REGPARM=1 USE_SYSTEMD=1 USE_PCRE= USE_PCRE_JIT=1 USE_NS=1 USE_OPENSSL=1 USE_LUA=1 LUA_INC=/usr/src/lua-$LUA_VERSION/src/ LUA_LIB=/usr/src/lua-$LUA_VERSION/src/ >/dev/null
-   
-    if [ ! -f haproxy ]; then
-        printf "\rThere was an error within the HAProxy build\n";
-        printf "\rmake TARGET=linux2628 USE_LINUX_SPLICE=1 USE_CPU_AFFINITY=1 USE_REGPARM=1 USE_SYSTEMD=1 USE_PCRE= USE_PCRE_JIT=1 USE_NS=1 USE_OPENSSL=1 USE_LUA=1 LUA_INC=/usr/src/lua-$LUA_VERSION/src/ LUA_LIB=/usr/src/lua-$LUA_VERSION/src/\n"
-        make TARGET=linux2628 USE_LINUX_SPLICE=1 USE_CPU_AFFINITY=1 USE_REGPARM=1 USE_SYSTEMD=1 USE_PCRE= USE_PCRE_JIT=1 USE_NS=1 USE_OPENSSL=1 USE_LUA=1 LUA_INC=/usr/src/lua-$LUA_VERSION/src/ LUA_LIB=/usr/src/lua-$LUA_VERSION/src/  
-    fi
-}
-
-install_rhel_haproxy() {
-    printf "\r[+] Installing HAProxy\n"
-    /bin/cp $SOURCE_DIR/haproxy-$HAPROXY_VERSION/haproxy $DEST_BASE_DIR/usr/sbin/
-    mkdir -p $DEST_BASE_DIR/etc/haproxy/pem
-}
-
-install_deb_haproxy() {
-    printf "\r[+] Installing HAProxy\n"
-    haproxy_deb_version=$(echo $HAPROXY_VERSION |cut -d'.' -f1-2)
-    add-apt-repository ppa:vbernat/haproxy-$haproxy_deb_version >/dev/null 2>&1 
-    apt-get update >/dev/null
-    apt-get install -y haproxy >/dev/null
-}
-
-install_haproxy_systemd() {
-    cd $SOURCE_DIR/haproxy-$HAPROXY_VERSION/contrib/systemd
-    make clean >/dev/null
-    make PREFIX=$DEST_BASE_DIR/usr >/dev/null
-    /bin/cp haproxy.service /usr/lib/systemd/system/$SYSTEMD_NAME
-    systemctl daemon-reload
-} 
 
 build_lua() {
     printf "\r[+] Building Lua\n"
@@ -144,37 +100,12 @@ install_luaoauth_deps() {
 }
 
 case $1 in
-    haproxy)
-        install_haproxy_var=true
-        ;;
     luaoauth)
         install_luaoauth_var=true
         ;;
-    all)
-        install_haproxy_var=true
-        install_luaoauth_var=true
-        ;;
     *)
-    print_help
+        echo "Usage: install.sh luaoauth"
 esac
-
-if $install_haproxy_var; then
-    # Install HAProxy
-    if $rhel_based; then
-        download_and_install_haproxylua=(download_haproxy_rhel download_rhel_lua install_yum_deps build_lua install_rhel_lua build_haproxy install_rhel_haproxy install_haproxy_systemd)
-        for func in ${download_and_install_haproxylua[*]}; do
-            $func &
-            display_working $!
-        done
-    elif $debian_based; then
-        download_and_install_haproxylua=(install_deb_haproxy install_deb_lua)
-        for func in ${download_and_install_haproxylua[*]}; do
-            $func &
-            display_working $!
-        done
-    fi
-    lua_installed=true
-fi
 
 if $install_luaoauth_var; then
     # Install Lua JWT
