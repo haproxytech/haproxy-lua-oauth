@@ -57,26 +57,33 @@ install_deb_lua() {
     apt-get install -y software-properties-common unzip build-essential libssl-dev lua5.3 liblua5.3-dev >/dev/null 2>&1
 }
 
-download_luaoauth() {
-    printf "\r[+] Downloading haproxy-lua-oauth\n"
+install_luaoauth_deps() {
+    printf "\r[+] Installing haproxy-lua-oauth dependencies\n"
+
+    if [ ! -e $lua_dep_dir ]; then
+        mkdir -p $lua_dep_dir;
+    fi;
+
+    apt-get update >/dev/null 2>&1
+    apt-get install -y build-essential liblua5.3-dev libssl-dev unzip >/dev/null 2>&1
+
     cd $SOURCE_DIR
-    curl -sLO https://github.com/haproxytech/haproxy-lua-oauth/archive/master.zip
+
+    curl -sLO https://github.com/rxi/json.lua/archive/refs/heads/master.zip
     unzip -qo master.zip && rm master.zip
-}
+    mv json.lua-master/json.lua $lua_dep_dir 
 
-download_luaoauth_deps() {
-    printf "\r[+] Downloading haproxy-lua-oauth dependencies\n"
-    cd $SOURCE_DIR
-    apt-get install -y unzip >/dev/null 2>&1
+    curl -sLO https://github.com/lunarmodules/luasocket/archive/refs/heads/master.zip
+    unzip -qo master.zip && rm master.zip
+    cd luasocket-master/
+    make clean all install-both LUAINC=/usr/include/lua5.3/ >/dev/null
+    cd ..
 
-    curl -sLO https://github.com/diegonehab/luasocket/archive/master.zip
-    unzip -qo master.zip && mv luasocket-master luasocket && rm master.zip
-
-    curl -sLO https://github.com/rxi/json.lua/archive/master.zip
-    unzip -qo master.zip && mv json.lua-master json && rm master.zip
-
-    curl -sLO https://github.com/wahern/luaossl/archive/rel-20181207.zip
-    unzip -qo rel-20181207.zip && mv luaossl-rel-20181207 luaossl && rm rel-20181207.zip
+    curl -sLO https://github.com/wahern/luaossl/archive/refs/heads/master.zip
+    unzip -qo master.zip && rm master.zip
+    cd luaossl-master/
+    make install >/dev/null
+    cd ..
 }
 
 install_luaoauth() {
@@ -84,19 +91,10 @@ install_luaoauth() {
     if [ ! -e $lua_dep_dir ]; then
         mkdir -p $lua_dep_dir;
     fi;
-    mv $SOURCE_DIR/haproxy-lua-oauth-master/lib/*.lua $lua_dep_dir
-}
 
-install_luaoauth_deps() {
-    printf "\r[+] Installing haproxy-lua-oauth dependencies\n"
     cd $SOURCE_DIR
-    cd luasocket/
-    make clean all install-both LUAINC=/usr/include/lua5.3/ >/dev/null
-    cd ..
-    cd luaossl/
-    make install >/dev/null
-    cd ..
-    mv json/json.lua $lua_dep_dir 
+
+    mv ./lib/*.lua $lua_dep_dir
 }
 
 case $1 in
@@ -109,18 +107,18 @@ esac
 
 if $install_luaoauth_var; then
     # Install Lua JWT
-    if ! $lua_installed; then
-        if $rhel_based; then
-            download_and_install_lua=(install_yum_deps download_rhel_lua build_lua install_rhel_lua)
-        elif $debian_based; then
-            download_and_install_lua=(install_deb_lua)
-        fi
-        for func in ${download_and_install_lua[*]}; do
-            $func &
-            display_working $!
-        done
-    fi 
-    download_and_install_luaoauth=(download_luaoauth_deps install_luaoauth_deps download_luaoauth install_luaoauth)
+    # if ! $lua_installed; then
+    #     if $rhel_based; then
+    #         download_and_install_lua=(install_yum_deps download_rhel_lua build_lua install_rhel_lua)
+    #     elif $debian_based; then
+    #         download_and_install_lua=(install_deb_lua)
+    #     fi
+    #     for func in ${download_and_install_lua[*]}; do
+    #         $func &
+    #         display_working $!
+    #     done
+    # fi 
+    download_and_install_luaoauth=(install_luaoauth_deps install_luaoauth)
     for func in ${download_and_install_luaoauth[*]}; do
         $func &
         display_working $!
