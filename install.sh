@@ -1,6 +1,7 @@
 #!/bin/bash
 SOURCE_DIR=/usr/src
 LUA_VERSION=5.3.5
+CWD=$(pwd)
 
 install_luaoauth_var=false
 rhel_based=false
@@ -57,7 +58,7 @@ install_deb_lua() {
     apt-get install -y software-properties-common unzip build-essential libssl-dev lua5.3 liblua5.3-dev >/dev/null 2>&1
 }
 
-install_luaoauth_deps() {
+install_luaoauth_deps_debian() {
     printf "\r[+] Installing haproxy-lua-oauth dependencies\n"
 
     if [ ! -e $lua_dep_dir ]; then
@@ -71,7 +72,7 @@ install_luaoauth_deps() {
 
     curl -sLO https://github.com/rxi/json.lua/archive/refs/heads/master.zip
     unzip -qo master.zip && rm master.zip
-    mv json.lua-master/json.lua $lua_dep_dir 
+    cp json.lua-master/json.lua $lua_dep_dir 
 
     curl -sLO https://github.com/lunarmodules/luasocket/archive/refs/heads/master.zip
     unzip -qo master.zip && rm master.zip
@@ -86,15 +87,43 @@ install_luaoauth_deps() {
     cd ..
 }
 
+install_luaoauth_deps_rhel() {
+    printf "\r[+] Installing haproxy-lua-oauth dependencies\n"
+
+    if [ ! -e $lua_dep_dir ]; then
+        mkdir -p $lua_dep_dir;
+    fi;
+
+    dnf config-manager --set-enabled powertools
+    dnf update >/dev/null 2>&1
+    dnf install -y gcc openssl-devel lua-devel make readline-devel systemd-devel unzip >/dev/null 2>&1
+
+    cd $SOURCE_DIR
+
+    curl -sLO https://github.com/rxi/json.lua/archive/refs/heads/master.zip
+    unzip -qo master.zip && rm master.zip
+    mv json.lua-master/json.lua $lua_dep_dir 
+
+    curl -sLO https://github.com/lunarmodules/luasocket/archive/refs/heads/master.zip
+    unzip -qo master.zip && rm master.zip
+    cd luasocket-master/
+    make clean all install-both LUAINC=/usr/include/ >/dev/null
+    cd ..
+
+    curl -sLO https://github.com/wahern/luaossl/archive/rel-20181207.zip
+    unzip -qo rel-20181207.zip && rm rel-20181207.zip
+    cd luaossl-rel-20181207/
+    make install >/dev/null
+    cd ..
+}
+
 install_luaoauth() {
     printf "\r[+] Installing haproxy-lua-oauth\n"
     if [ ! -e $lua_dep_dir ]; then
         mkdir -p $lua_dep_dir;
     fi;
 
-    cd $SOURCE_DIR
-
-    mv ./lib/*.lua $lua_dep_dir
+    cp $CWD/lib/*.lua $lua_dep_dir
 }
 
 case $1 in
@@ -106,19 +135,12 @@ case $1 in
 esac
 
 if $install_luaoauth_var; then
-    # Install Lua JWT
-    # if ! $lua_installed; then
-    #     if $rhel_based; then
-    #         download_and_install_lua=(install_yum_deps download_rhel_lua build_lua install_rhel_lua)
-    #     elif $debian_based; then
-    #         download_and_install_lua=(install_deb_lua)
-    #     fi
-    #     for func in ${download_and_install_lua[*]}; do
-    #         $func &
-    #         display_working $!
-    #     done
-    # fi 
-    download_and_install_luaoauth=(install_luaoauth_deps install_luaoauth)
+    if $rhel_based; then
+        download_and_install_luaoauth=(install_luaoauth_deps_rhel install_luaoauth)
+    elif $debian_based; then
+        download_and_install_luaoauth=(install_luaoauth_deps_debian install_luaoauth)
+    fi
+
     for func in ${download_and_install_luaoauth[*]}; do
         $func &
         display_working $!
