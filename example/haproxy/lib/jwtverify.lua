@@ -31,6 +31,10 @@ if not config then
   }
 end
 
+-- search these paths for *.lua and *.so files on CentOS/RHEL
+package.path = package.path .. ';/usr/local/share/lua/5.3/?.lua'
+package.cpath = package.cpath .. ';/usr/local/lib/lua/5.3/?.so;/usr/local/lib/lua/5.3/?/?.so'
+
 local json   = require 'json'
 local base64 = require 'base64'
 local openssl = {
