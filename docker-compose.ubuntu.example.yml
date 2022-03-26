@@ -1,0 +1,27 @@
+---
+version: "3"
+services:
+
+  server1:
+    image: example/web:latest
+    build:
+      context: example/web
+    environment:
+    - "name=server1"
+
+  haproxy:
+    image: example/haproxy-ubuntu
+    build:
+      context: example/haproxy
+      dockerfile: Dockerfile-ubuntu
+    volumes:
+       - ./example/haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg
+       - ./example/haproxy/pem/pubkey.pem:/etc/haproxy/pem/pubkey.pem
+       - ./example/haproxy/pem/test.com.pem:/etc/haproxy/pem/test.com.pem
+    ports:
+    - "80:80"
+    - "443:443"
+    - "8080:8080"
+    - "9000:9000"
+    depends_on:
+    - server1

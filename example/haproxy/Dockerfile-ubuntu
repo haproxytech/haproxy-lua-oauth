@@ -1,0 +1,4 @@
+FROM haproxytech/haproxy-ubuntu:2.5
+WORKDIR /usr/src
+COPY . .
+RUN ./install.sh luaoauth
