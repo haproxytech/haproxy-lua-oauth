@@ -29,15 +29,20 @@ display_working() {
     done
 }
 
+# ----------------------------
+# Functions not currently used
+# ----------------------------
+
 download_rhel_lua() {
     printf "\r[+] Downloading Lua\n"
+    cd $SOURCE_DIR
     curl -sLO https://www.lua.org/ftp/lua-$LUA_VERSION.tar.gz
     tar xf lua-$LUA_VERSION.tar.gz && rm lua-$LUA_VERSION.tar.gz
 }
 
 install_yum_deps() {
     printf "\r[+] Installing yum dependencies\n"
-    yum -y install gcc openssl-devel readline-devel systemd-devel unzip >/dev/null 2>&1
+    yum -y install dnf gcc openssl-devel readline-devel systemd-devel unzip >/dev/null 2>&1
 }
 
 build_lua() {
@@ -57,6 +62,9 @@ install_deb_lua() {
     apt-get update >/dev/null 2>&1
     apt-get install -y software-properties-common unzip build-essential libssl-dev lua5.3 liblua5.3-dev >/dev/null 2>&1
 }
+
+# ----------------------------
+# ----------------------------
 
 install_luaoauth_deps_debian() {
     printf "\r[+] Installing haproxy-lua-oauth dependencies\n"
@@ -94,6 +102,8 @@ install_luaoauth_deps_rhel() {
         mkdir -p $lua_dep_dir;
     fi;
 
+    yum -y install dnf
+    dnf -y install dnf-plugins-core
     dnf config-manager --set-enabled powertools
     dnf update >/dev/null 2>&1
     dnf install -y gcc openssl-devel lua-devel make readline-devel systemd-devel unzip >/dev/null 2>&1

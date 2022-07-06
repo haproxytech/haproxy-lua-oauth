@@ -10,9 +10,15 @@ Vagrant.configure("2") do |config|
         server.vm.network "private_network", ip: "192.168.56.30"
     end
 
-    config.vm.define "centos8" do |server|
-        server.vm.box = "centos/8"
-        server.vm.hostname = "centos8"
-        server.vm.network "private_network", ip: "192.168.56.39"
-    end
+    # config.vm.define "centos8" do |server|
+    #     server.vm.box = "centos/8"
+    #     server.vm.hostname = "centos8"
+    #     server.vm.network "private_network", ip: "192.168.56.31"
+    # end
+
+    # config.vm.define "centos7" do |server|
+    #     server.vm.box = "centos/7"
+    #     server.vm.hostname = "centos7"
+    #     server.vm.network "private_network", ip: "192.168.56.32"
+    # end
 end
