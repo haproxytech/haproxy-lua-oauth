@@ -1,13 +1,13 @@
 #!/bin/bash
 SOURCE_DIR=/usr/src
-LUA_VERSION=5.3.5
+LUA_VERSION=5.4.4
 CWD=$(pwd)
 
 install_luaoauth_var=false
 rhel_based=false
 debian_based=false
 lua_installed=false
-lua_dep_dir=/usr/local/share/lua/5.3/
+lua_dep_dir=/usr/local/share/lua/5.4/
 
 if [ -f /etc/redhat-release ]; then
     rhel_based=true
@@ -55,7 +55,7 @@ install_rhel_lua() {
 install_deb_lua() {
     printf "\r[+] Installing Lua\n"
     apt-get update >/dev/null 2>&1
-    apt-get install -y software-properties-common unzip build-essential libssl-dev lua5.3 liblua5.3-dev >/dev/null 2>&1
+    apt-get install -y software-properties-common unzip build-essential libssl-dev lua5.4 liblua5.4-dev >/dev/null 2>&1
 }
 
 install_luaoauth_deps_debian() {
@@ -66,7 +66,7 @@ install_luaoauth_deps_debian() {
     fi;
 
     apt-get update >/dev/null 2>&1
-    apt-get install -y build-essential liblua5.3-dev libssl-dev unzip >/dev/null 2>&1
+    apt-get install -y build-essential liblua5.4-dev libssl-dev unzip >/dev/null 2>&1
 
     cd $SOURCE_DIR
 
@@ -77,7 +77,7 @@ install_luaoauth_deps_debian() {
     curl -sLO https://github.com/lunarmodules/luasocket/archive/refs/heads/master.zip
     unzip -qo master.zip && rm master.zip
     cd luasocket-master/
-    make clean all install-both LUAINC=/usr/include/lua5.3/ >/dev/null
+    make clean all install-both LUAINC=/usr/include/lua5.4/ >/dev/null
     cd ..
 
     curl -sLO https://github.com/wahern/luaossl/archive/refs/heads/master.zip

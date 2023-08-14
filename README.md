@@ -20,7 +20,7 @@ chmod +x ./install.sh
 sudo ./install.sh luaoauth
 ```
 
-This installs jwtverify.lua and its dependencies to **/usr/local/share/lua/5.3/jwtverify.lua**.
+This installs jwtverify.lua and its dependencies to **/usr/local/share/lua/5.4/jwtverify.lua**.
 
 ## Usage
 
@@ -88,8 +88,8 @@ Try it out using the Docker Compose.
 
 1. Create the environment with Docker Compose:
     ```
-    $ docker-compose -f docker-compose.ubuntu.example.yml build
-    $ docker-compose -f docker-compose.ubuntu.example.yml up
+    $ docker compose -f docker-compose.ubuntu.example.yml build
+    $ docker compose -f docker-compose.ubuntu.example.yml up
     ```
 1. Get a JSON web token (JWT) from your authentication server by going to your application on the Auth0 website and following the *Quick Start*.
 1. Make requests to https://localhost/api/myapp and attach the JWT in the Authorization header. You should get a successful response.
